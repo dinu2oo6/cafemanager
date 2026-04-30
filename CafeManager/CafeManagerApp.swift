@@ -10,11 +10,15 @@ import FirebaseCore
 
 @main
 struct CafeManagerApp: App {
-    @StateObject private var authManager = AuthenticationManager()
-    @StateObject private var dataService = FirebaseDataService()
+    @StateObject private var authManager: AuthenticationManager
+    @StateObject private var dataService: FirebaseDataService
 
     init() {
-        FirebaseApp.configure()
+        if FirebaseApp.app() == nil {
+            FirebaseApp.configure()
+        }
+        _authManager = StateObject(wrappedValue: AuthenticationManager())
+        _dataService = StateObject(wrappedValue: FirebaseDataService())
     }
 
     var body: some Scene {
