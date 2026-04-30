@@ -52,11 +52,11 @@ class InventoryViewModel: ObservableObject {
         isProcessing = false
     }
 
-    func logConsumption(itemId: String, amount: Int, service: FirebaseDataService) async {
+    func logConsumption(itemId: String, amount: Int, date: Date, service: FirebaseDataService) async {
         isProcessing = true
         errorMessage = nil
         do {
-            try await service.logConsumption(itemId: itemId, amount: amount)
+            try await service.logConsumption(itemId: itemId, amount: amount, date: date)
         } catch {
             errorMessage = error.localizedDescription
         }

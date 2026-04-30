@@ -17,6 +17,14 @@ enum UrgencyLevel: String, Codable, CaseIterable {
     case normal = "Normal"
 }
 
+// MARK: - Consumption Entry
+
+struct ConsumptionEntry: Codable, Identifiable, Hashable {
+    var id: String = UUID().uuidString
+    var quantity: Int
+    var date: Date
+}
+
 // MARK: - Waste Entry
 
 struct WasteEntry: Codable, Identifiable, Hashable {
@@ -38,6 +46,7 @@ struct InventoryItem: Identifiable, Codable {
     var sellingPrice: Double
     var supplierId: String
     var dailyConsumption: [Int]
+    var consumptionLog: [ConsumptionEntry]?
     var wasteRecord: [WasteEntry]
     var expiryDate: Date?
     @ServerTimestamp var createdAt: Date?

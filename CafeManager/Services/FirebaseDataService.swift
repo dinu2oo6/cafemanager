@@ -94,15 +94,26 @@ class FirebaseDataService: ObservableObject {
         try await db.collection("\(path)/inventory").document(itemId).delete()
     }
 
-    func logConsumption(itemId: String, amount: Int) async throws {
+    func logConsumption(itemId: String, amount: Int, date: Date = Date()) async throws {
         guard let path = basePath else { throw FirebaseError.notAuthenticated }
         guard var item = inventoryItems.first(where: { $0.id == itemId }) else {
             throw FirebaseError.documentNotFound
         }
-        var consumption = item.dailyConsumption
-        consumption.append(amount)
-        if consumption.count > 30 { consumption = Array(consumption.suffix(30)) }
-        item.dailyConsumption = consumption
+
+        var logs = item.consumptionLog ?? []
+        logs.append(ConsumptionEntry(quantity: amount, date: date))
+        logs.sort { $0.date < $1.date }
+        item.consumptionLog = logs
+
+        let calendar = Calendar.current
+        let grouped = Dictionary(grouping: logs) {
+            calendar.startOfDay(for: $0.date)
+        }
+        let daily = grouped.keys.sorted().map { day in
+            grouped[day]?.reduce(0) { $0 + $1.quantity } ?? 0
+        }
+        item.dailyConsumption = Array(daily.suffix(30))
+
         item.quantity = max(0, item.quantity - amount)
         try db.collection("\(path)/inventory").document(itemId).setData(from: item, merge: true)
     }

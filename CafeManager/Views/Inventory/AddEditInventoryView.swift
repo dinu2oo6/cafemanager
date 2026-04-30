@@ -8,6 +8,11 @@ struct AddEditInventoryView: View {
     let item: InventoryItem?
     var isEditing: Bool { item?.id != nil }
 
+    private var currentItem: InventoryItem? {
+        guard let itemId = item?.id else { return item }
+        return dataService.inventoryItems.first(where: { $0.id == itemId }) ?? item
+    }
+
     // Form fields
     @State private var name = ""
     @State private var quantity = ""
@@ -22,11 +27,13 @@ struct AddEditInventoryView: View {
 
     // Consumption logging
     @State private var consumptionAmount = ""
+    @State private var consumptionDate = Date()
     @State private var showConsumptionSheet = false
 
     // Waste logging
     @State private var wasteAmount = ""
     @State private var wasteReason = ""
+    @State private var wasteDate = Date()
     @State private var showWasteSheet = false
 
     let units = ["kg", "g", "L", "mL", "pcs", "dozen", "bags", "boxes", "packets"]
@@ -140,6 +147,7 @@ struct AddEditInventoryView: View {
                     if isEditing {
                         Section("Track Usage") {
                             Button {
+                                consumptionDate = Date()
                                 showConsumptionSheet = true
                             } label: {
                                 Label("Log Daily Consumption", systemImage: "chart.line.downtrend.xyaxis")
@@ -147,6 +155,7 @@ struct AddEditInventoryView: View {
                             }
 
                             Button {
+                                wasteDate = Date()
                                 showWasteSheet = true
                             } label: {
                                 Label("Log Waste / Spoilage", systemImage: "trash")
@@ -155,7 +164,7 @@ struct AddEditInventoryView: View {
                         }
 
                         // Stats
-                        if let currentItem = item {
+                        if let currentItem = currentItem {
                             Section("Statistics") {
                                 HStack {
                                     Text("Daily Avg Consumption")
@@ -185,11 +194,11 @@ struct AddEditInventoryView: View {
                                         .foregroundColor(currentItem.profitPerUnit >= 0 ? AppTheme.success : AppTheme.error)
                                 }
                                 HStack {
-                                    Text("Consumption History")
+                                    Text("Consumption Days")
                                         .font(.caption)
                                         .foregroundColor(AppTheme.secondary)
                                     Spacer()
-                                    Text("\(currentItem.dailyConsumption.count) entries")
+                                    Text("\(currentItem.dailyConsumption.count) days")
                                         .font(.caption.bold())
                                         .foregroundColor(AppTheme.secondary)
                                 }
@@ -223,25 +232,53 @@ struct AddEditInventoryView: View {
                         .cornerRadius(12)
                 }
             }
-            .alert("Log Consumption", isPresented: $showConsumptionSheet) {
-                TextField("Amount consumed today", text: $consumptionAmount)
-                    .keyboardType(.numberPad)
-                Button("Cancel", role: .cancel) { consumptionAmount = "" }
-                Button("Log") { logConsumption() }
-            } message: {
-                Text("Enter the amount of \(name) consumed today (in \(unit)).")
-            }
-            .alert("Log Waste", isPresented: $showWasteSheet) {
-                TextField("Wasted quantity", text: $wasteAmount)
-                    .keyboardType(.numberPad)
-                TextField("Reason (e.g., expired, damaged)", text: $wasteReason)
-                Button("Cancel", role: .cancel) {
-                    wasteAmount = ""
-                    wasteReason = ""
+            .sheet(isPresented: $showConsumptionSheet) {
+                NavigationStack {
+                    Form {
+                        TextField("Amount consumed", text: $consumptionAmount)
+                            .keyboardType(.numberPad)
+                        DatePicker("Consumption Date", selection: $consumptionDate, in: ...Date(), displayedComponents: .date)
+                    }
+                    .navigationTitle("Log Consumption")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button("Cancel") {
+                                consumptionAmount = ""
+                                showConsumptionSheet = false
+                            }
+                        }
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Log") { logConsumption() }
+                                .bold()
+                        }
+                    }
                 }
-                Button("Log") { logWaste() }
-            } message: {
-                Text("Enter the wasted amount and reason.")
+            }
+            .sheet(isPresented: $showWasteSheet) {
+                NavigationStack {
+                    Form {
+                        TextField("Wasted quantity", text: $wasteAmount)
+                            .keyboardType(.numberPad)
+                        TextField("Reason (e.g., expired, damaged)", text: $wasteReason)
+                        DatePicker("Waste Date", selection: $wasteDate, in: ...Date(), displayedComponents: .date)
+                    }
+                    .navigationTitle("Log Waste")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button("Cancel") {
+                                wasteAmount = ""
+                                wasteReason = ""
+                                showWasteSheet = false
+                            }
+                        }
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Log") { logWaste() }
+                                .bold()
+                        }
+                    }
+                }
             }
         }
     }
@@ -295,8 +332,9 @@ struct AddEditInventoryView: View {
             return
         }
         Task {
-            await viewModel.logConsumption(itemId: itemId, amount: amount, service: dataService)
+            await viewModel.logConsumption(itemId: itemId, amount: amount, date: consumptionDate, service: dataService)
             consumptionAmount = ""
+            showConsumptionSheet = false
         }
     }
 
@@ -307,10 +345,11 @@ struct AddEditInventoryView: View {
             wasteReason = ""
             return
         }
-        let entry = WasteEntry(quantity: amount, reason: wasteReason, date: Date())
+        let entry = WasteEntry(quantity: amount, reason: wasteReason, date: wasteDate)
         Task {
             do {
                 try await dataService.logWaste(itemId: itemId, entry: entry)
+                showWasteSheet = false
             } catch {
                 viewModel.errorMessage = error.localizedDescription
             }

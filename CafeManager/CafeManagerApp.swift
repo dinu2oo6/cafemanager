@@ -12,6 +12,7 @@ import FirebaseCore
 struct CafeManagerApp: App {
     @StateObject private var authManager: AuthenticationManager
     @StateObject private var dataService: FirebaseDataService
+    @StateObject private var stockAlertManager = StockAlertNotificationManager()
 
     init() {
         if FirebaseApp.app() == nil {
@@ -21,6 +22,24 @@ struct CafeManagerApp: App {
         _dataService = StateObject(wrappedValue: FirebaseDataService())
     }
 
+    private var inventoryAlertSignature: String {
+        dataService.inventoryItems
+            .map { item in
+                "\(item.id ?? "")|\(item.quantity)|\(item.dailyConsumption.count)|\(item.supplierId)"
+            }
+            .sorted()
+            .joined(separator: ",")
+    }
+
+    private var supplierAlertSignature: String {
+        dataService.suppliers
+            .map { supplier in
+                "\(supplier.id ?? "")|\(supplier.leadTimeInDays)"
+            }
+            .sorted()
+            .joined(separator: ",")
+    }
+
     var body: some Scene {
         WindowGroup {
             Group {
@@ -28,9 +47,32 @@ struct CafeManagerApp: App {
                     MainTabView()
                         .environmentObject(authManager)
                         .environmentObject(dataService)
+                        .task {
+                            await stockAlertManager.requestAuthorizationIfNeeded()
+                            await stockAlertManager.refreshStockAlerts(
+                                items: dataService.inventoryItems,
+                                suppliers: dataService.suppliers
+                            )
+                        }
                         .onAppear {
                             if let userId = authManager.currentUser?.uid {
                                 dataService.configure(userId: userId)
+                            }
+                        }
+                        .onChange(of: inventoryAlertSignature) { _ in
+                            Task {
+                                await stockAlertManager.refreshStockAlerts(
+                                    items: dataService.inventoryItems,
+                                    suppliers: dataService.suppliers
+                                )
+                            }
+                        }
+                        .onChange(of: supplierAlertSignature) { _ in
+                            Task {
+                                await stockAlertManager.refreshStockAlerts(
+                                    items: dataService.inventoryItems,
+                                    suppliers: dataService.suppliers
+                                )
                             }
                         }
                 } else {
