@@ -61,6 +61,11 @@ class AuthenticationManager: ObservableObject {
 
     private func mapAuthError(_ error: Error) -> String {
         let nsError = error as NSError
+        print("🔴 Firebase Auth Error — Code: \(nsError.code), Domain: \(nsError.domain), Description: \(nsError.localizedDescription)")
+        if let underlyingError = nsError.userInfo[NSUnderlyingErrorKey] as? NSError {
+            print("🔴 Underlying error: \(underlyingError)")
+        }
+
         switch nsError.code {
         case AuthErrorCode.emailAlreadyInUse.rawValue:
             return "This email is already registered. Please sign in instead."
@@ -70,12 +75,26 @@ class AuthenticationManager: ObservableObject {
             return "Password must be at least 6 characters."
         case AuthErrorCode.wrongPassword.rawValue:
             return "Incorrect password. Please try again."
+        case AuthErrorCode.invalidCredential.rawValue:
+            return "Invalid email or password. Please check and try again."
         case AuthErrorCode.userNotFound.rawValue:
             return "No account found with this email. Please sign up."
         case AuthErrorCode.networkError.rawValue:
             return "Network error. Please check your connection and try again."
+        case AuthErrorCode.tooManyRequests.rawValue:
+            return "Too many attempts. Please wait a moment and try again."
+        case AuthErrorCode.operationNotAllowed.rawValue:
+            return "Email/Password sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method."
+        case AuthErrorCode.internalError.rawValue:
+            return "Firebase configuration error. Please ensure Email/Password authentication is enabled in Firebase Console → Authentication → Sign-in method."
+        case AuthErrorCode.userDisabled.rawValue:
+            return "This account has been disabled. Please contact support."
         default:
-            return error.localizedDescription
+            let description = error.localizedDescription
+            if description.contains("internal error") {
+                return "Firebase configuration error. Enable Email/Password sign-in in Firebase Console → Authentication → Sign-in method."
+            }
+            return description
         }
     }
 }
