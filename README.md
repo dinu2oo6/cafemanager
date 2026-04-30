@@ -7,8 +7,6 @@ An intelligent iOS application for café owners to manage inventory, suppliers, 
 
 ---
 
-## 📱 Screenshots
-
 *Run the app in Xcode Simulator to see the full UI.*
 
 ---
