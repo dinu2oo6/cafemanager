@@ -10,7 +10,7 @@
 
 | Sign In | Create Account |
 |:---:|:---:|
-| ![Sign In](Screenshots/login.png) | ![Create Account](Screenshots/signup.png) |
+| ![Sign In](screenshots/login.png) | ![Create Account](screenshots/signup.png) |
 | Email + password login with Firebase Auth | Register with email, password, and confirmation |
 
 ---
@@ -19,7 +19,7 @@
 
 | Revenue, Profit & Stock Alerts | Top Sellers, Payments & Low Stock |
 |:---:|:---:|
-| ![Dashboard](Screenshots/dashboard.png) | ![Dashboard Scrolled](Screenshots/dashboard2.png) |
+| ![Dashboard](screenshots/dashboard.png) | ![Dashboard Scrolled](screenshots/dashboard2.png) |
 | Today's revenue card, profit margin, target progress, and active stock alerts | Hourly revenue chart, ranked top sellers, payment breakdown, low stock cards |
 
 ---
@@ -28,7 +28,7 @@
 
 | Sales History | New Sale — Cart | New Sale — Payment & Confirm |
 |:---:|:---:|:---:|
-| ![Sales](Screenshots/sales.png) | ![New Sale Cart](Screenshots/sales2.png) | ![New Sale Checkout](Screenshots/sales3.png) |
+| ![Sales](screenshots/sales.png) | ![New Sale Cart](screenshots/sales2.png) | ![New Sale Checkout](screenshots/sales3.png) |
 | Revenue ₹2,820 · 3 orders · Profit ₹1,735 with payment filter tabs | Item grid with live cart, quantity controls, and running total | Payment method selector, customer name, discount slider, Complete Sale |
 
 ---
@@ -37,12 +37,12 @@
 
 | Low Stock Section | All Items | Edit Item — SKU & Details |
 |:---:|:---:|:---:|
-| ![Low Stock](Screenshots/inventory2.png) | ![All Items](Screenshots/inventory3.png) | ![Edit Details](Screenshots/invemtory.png) |
+| ![Low Stock](screenshots/inventory2.png) | ![All Items](screenshots/inventory3.png) | ![Edit Details](screenshots/invemtory.png) |
 | 4 items below reorder level with days-left countdown | Full catalogue — cost, sell price, stock level bar, expiry countdown | SKU auto-generation, name, brand, category, quantity, unit, reorder level |
 
 | Edit Item — Pricing, Supplier & Tracking | Edit Item — Live Statistics |
 |:---:|:---:|
-| ![Pricing](Screenshots/inventory.png) | ![Stats](Screenshots/inventory1.png) |
+| ![Pricing](screenshots/inventory.png) | ![Stats](screenshots/inventory1.png) |
 | Cost/sell prices, margin preview, supplier link, expiry toggle, consumption & waste logging | Computed stats: 1.5 pcs/day avg · 2 days to stockout · profit per unit |
 
 ---
@@ -51,12 +51,12 @@
 
 | Recipes — Cost & Margin Overview | Latte — Full Cost Breakdown | Smart Suggestions |
 |:---:|:---:|:---:|
-| ![Recipes](Screenshots/recipie.png) | ![Cost Detail](Screenshots/recipe2.png) | ![Suggestions](Screenshots/recipie3.png) |
+| ![Recipes](screenshots/recipie.png) | ![Cost Detail](screenshots/recipe2.png) | ![Suggestions](screenshots/recipie3.png) |
 | Latte 100% · Americano 99% · Cappuccino 99% — cost, profit, suggestion count | Ingredient-level breakdown: Coffee 89% of cost, Milk 11%, Sugar 0% | Portion optimise · Bulk buy (save ₹1,944/mo) · Seasonal promotion |
 
 | Stock Availability Per Ingredient | Profitability Ranking | What-If Price Simulator | New Recipe |
 |:---:|:---:|:---:|:---:|
-| ![Stock](Screenshots/recipie4.png) | ![Profitability](Screenshots/recipie5.png) | ![What-If](Screenshots/recipie6.png) | ![New Recipe](Screenshots/recipie7.png) |
+| ![Stock](screenshots/recipie4.png) | ![Profitability](screenshots/recipie5.png) | ![What-If](screenshots/recipie6.png) | ![New Recipe](screenshots/recipie7.png) |
 | Coffee stock → 2,050 servings · Milk → 1,030 · Sugar → 1,500 | Menu ranked by margin — #1 Latte 100%, #2 Americano 99%, #3 Cappuccino 99% | Coffee +55%: Latte cost ₹2.71→₹4.03 · Cappuccino margin 99%→98% | Name, category, selling price, serving size, prep time, ingredients |
 
 ---
@@ -65,7 +65,7 @@
 
 | Health Score & Critical Alert | Insights Navigation & Consumption Patterns |
 |:---:|:---:|
-| ![Predictions](Screenshots/predictions.png) | ![Predictions Scrolled](Screenshots/predictioins1.png) |
+| ![Predictions](screenshots/predictions.png) | ![Predictions Scrolled](screenshots/predictioins1.png) |
 | Score 65 — Eggs: 2 days stock, supplier needs 3 days → order 41 pcs by 3 May | Demand Forecast · Price Optimisation (8 low-margin) · Waste Prediction (2 at risk) · daily/weekday/weekend grid |
 
 ---
@@ -74,7 +74,7 @@
 
 | 7-Day Demand Forecast with Confidence Decay |
 |:---:|
-| ![Demand Forecast](Screenshots/demand.png) |
+| ![Demand Forecast](screenshots/demand.png) |
 | Coffee BRU — item selector tabs · daily avg 4.5 · Mon 1.0 kg 90% → Sat 0.0 kg 65% confidence |
 
 ---
@@ -83,7 +83,7 @@
 
 | Waste Risk Overview & At-Risk Items | Items Without Expiry Set |
 |:---:|:---:|
-| ![Waste](Screenshots/waste.png) | ![No Expiry](Screenshots/waste2.png) |
+| ![Waste](screenshots/waste.png) | ![No Expiry](screenshots/waste2.png) |
 | Sugar Corp EXPIRED 100% risk · Milk 10 days 90% risk (93 L waste) · Coffee 0% safe | 8 items with no expiry date listed for reference |
 
 ---
@@ -92,7 +92,7 @@
 
 | Margin Overview & Annual Savings Insights |
 |:---:|
-| ![Price Optimisation](Screenshots/optimization.png) |
+| ![Price Optimisation](screenshots/optimization.png) |
 | 0 at loss · 8 low margin · 3 healthy — Eggs: find supplier under ₹7/pcs to save ₹2,592/year |
 
 ---
@@ -101,7 +101,7 @@
 
 | Overview & Revenue Trend | Item Performance, Margin Analysis & Customer Metrics |
 |:---:|:---:|
-| ![Analytics](Screenshots/analytics.png) | ![Analytics Scrolled](Screenshots/analytics2.png) |
+| ![Analytics](screenshots/analytics.png) | ![Analytics Scrolled](screenshots/analytics2.png) |
 | Week: Revenue ₹8,796 · Profit ₹4,696 · 8 orders · revenue trend bar chart by day | Coffee 13 sold ₹5,033 · Milk 97.6% margin · Sugar Corp 93.3% · waste & customer metrics |
 
 ---
@@ -110,7 +110,7 @@
 
 | Supplier Directory |
 |:---:|
-| ![Suppliers](Screenshots/suppliers.png) |
+| ![Suppliers](screenshots/suppliers.png) |
 | Hemraj 3★ · 13d lead · owed ₹2,889 — Dinesh 4★ · 2d lead · owed ₹1,000 — Shailk 4★ · 13d lead · owed ₹1,300 |
 
 ---
@@ -119,7 +119,7 @@
 
 | Orders List — Status & ETA | New Order Form |
 |:---:|:---:|
-| ![Orders](Screenshots/orders.png) | ![New Order](Screenshots/orders2.png) |
+| ![Orders](screenshots/orders.png) | ![New Order](screenshots/orders2.png) |
 | Pending orders with units, cost, order date, and ETA — overdue ETA shown in red | Select item + supplier · quantity · unit price · auto-calculated delivery date |
 
 ---
@@ -128,7 +128,7 @@
 
 | Natural Language Chat | Supplier Bill Scanning | Batch Inventory Update |
 |:---:|:---:|:---:|
-| ![AI Chat](Screenshots/aiassistant.png) | ![Bill Scanning](Screenshots/aiassistant2.png) | ![Batch Update](Screenshots/aiassistant3.png) |
+| ![AI Chat](screenshots/aiassistant.png) | ![Bill Scanning](screenshots/aiassistant2.png) | ![Batch Update](screenshots/aiassistant3.png) |
 | "Sales this month" → Orders: 8 · Revenue: ₹8,796 · Profit: ₹4,696 · Avg Order: ₹1,099 | Supplier bill photo → llava:13b extracts 10 line items and updates each one live | All items batch-updated from bill · "Add 50 kgs coffee" voice follow-up → Coffee 50→100 kg |
 
 ---
