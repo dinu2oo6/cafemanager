@@ -8,11 +8,10 @@ struct SettingsView: View {
     @State private var showingLogoutAlert = false
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                AppTheme.accent.ignoresSafeArea()
+        ZStack {
+            AppTheme.accent.ignoresSafeArea()
 
-                List {
+            List {
                     // MARK: - Café Profile
                     Section {
                         HStack(spacing: 16) {
@@ -131,17 +130,16 @@ struct SettingsView: View {
                 }
                 .listStyle(.insetGrouped)
                 .scrollContentBackground(.hidden)
+        }
+        .navigationTitle("Settings")
+        .alert("Sign Out", isPresented: $showingLogoutAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Sign Out", role: .destructive) {
+                dataService.reset()
+                authManager.signOut()
             }
-            .navigationTitle("Settings")
-            .alert("Sign Out", isPresented: $showingLogoutAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Sign Out", role: .destructive) {
-                    dataService.reset()
-                    authManager.signOut()
-                }
-            } message: {
-                Text("Are you sure you want to sign out? You'll need to sign in again to access your data.")
-            }
+        } message: {
+            Text("Are you sure you want to sign out? You'll need to sign in again to access your data.")
         }
     }
 }

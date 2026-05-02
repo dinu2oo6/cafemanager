@@ -103,9 +103,27 @@ struct InventoryListView: View {
             VStack(alignment: .leading, spacing: 8) {
                 // Title row
                 HStack {
-                    Text(item.name)
-                        .font(.headline)
-                        .foregroundColor(isLow ? AppTheme.error : AppTheme.textPrimary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.displayName)
+                            .font(.headline)
+                            .foregroundColor(isLow ? AppTheme.error : AppTheme.textPrimary)
+                        HStack(spacing: 6) {
+                            if let sku = item.sku, !sku.isEmpty {
+                                Text(sku)
+                                    .font(.caption2.bold().monospaced())
+                                    .foregroundColor(AppTheme.primary)
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 2)
+                                    .background(AppTheme.primary.opacity(0.08))
+                                    .cornerRadius(4)
+                            }
+                            if let cat = item.category {
+                                Label(cat.rawValue, systemImage: cat.icon)
+                                    .font(.caption2)
+                                    .foregroundColor(AppTheme.secondary)
+                            }
+                        }
+                    }
 
                     Spacer()
 

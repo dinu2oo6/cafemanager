@@ -7,50 +7,48 @@ struct SupplierListView: View {
     @State private var selectedSupplier: Supplier?
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                AppTheme.accent.ignoresSafeArea()
+        ZStack {
+            AppTheme.accent.ignoresSafeArea()
 
-                Group {
-                    if dataService.isLoading {
-                        LoadingView(message: "Loading suppliers...")
-                    } else if dataService.suppliers.isEmpty {
-                        EmptyStateView(
-                            icon: "person.2",
-                            title: "No Suppliers",
-                            message: "Add your suppliers to link them with inventory items and track deliveries.",
-                            actionTitle: "Add Supplier"
-                        ) { showingAdd = true }
-                    } else {
-                        supplierList
-                    }
+            Group {
+                if dataService.isLoading {
+                    LoadingView(message: "Loading suppliers...")
+                } else if dataService.suppliers.isEmpty {
+                    EmptyStateView(
+                        icon: "person.2",
+                        title: "No Suppliers",
+                        message: "Add your suppliers to link them with inventory items and track deliveries.",
+                        actionTitle: "Add Supplier"
+                    ) { showingAdd = true }
+                } else {
+                    supplierList
                 }
             }
-            .navigationTitle("Suppliers")
-            .searchable(text: $viewModel.searchText, prompt: "Search suppliers...")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { showingAdd = true } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .foregroundColor(AppTheme.primary)
-                            .font(.title3)
-                    }
+        }
+        .navigationTitle("Suppliers")
+        .searchable(text: $viewModel.searchText, prompt: "Search suppliers...")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button { showingAdd = true } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundColor(AppTheme.primary)
+                        .font(.title3)
                 }
             }
-            .sheet(isPresented: $showingAdd) {
-                AddEditSupplierView(supplier: nil)
-            }
-            .sheet(item: $selectedSupplier) { supplier in
-                AddEditSupplierView(supplier: supplier)
-            }
-            .overlay(alignment: .top) {
-                if let error = viewModel.errorMessage ?? dataService.errorMessage {
-                    ErrorBannerView(message: error, dismissAction: {
-                        viewModel.errorMessage = nil
-                        dataService.errorMessage = nil
-                    })
-                    .padding(.horizontal)
-                }
+        }
+        .sheet(isPresented: $showingAdd) {
+            AddEditSupplierView(supplier: nil)
+        }
+        .sheet(item: $selectedSupplier) { supplier in
+            AddEditSupplierView(supplier: supplier)
+        }
+        .overlay(alignment: .top) {
+            if let error = viewModel.errorMessage ?? dataService.errorMessage {
+                ErrorBannerView(message: error, dismissAction: {
+                    viewModel.errorMessage = nil
+                    dataService.errorMessage = nil
+                })
+                .padding(.horizontal)
             }
         }
     }

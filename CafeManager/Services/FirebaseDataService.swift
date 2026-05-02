@@ -20,6 +20,10 @@ class FirebaseDataService: ObservableObject {
     @Published var inventoryItems: [InventoryItem] = []
     @Published var suppliers: [Supplier] = []
     @Published var orders: [Order] = []
+    @Published var sales: [SaleTransaction] = []
+    @Published var customers: [Customer] = []
+    @Published var staffMembers: [StaffMember] = []
+    @Published var recipes: [Recipe] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
 
@@ -40,6 +44,10 @@ class FirebaseDataService: ObservableObject {
         inventoryItems = []
         suppliers = []
         orders = []
+        sales = []
+        customers = []
+        staffMembers = []
+        recipes = []
     }
 
     private func removeAllListeners() {
@@ -51,6 +59,10 @@ class FirebaseDataService: ObservableObject {
         listenToInventory()
         listenToSuppliers()
         listenToOrders()
+        listenToSales()
+        listenToCustomers()
+        listenToStaff()
+        listenToRecipes()
     }
 
     private var basePath: String? {
@@ -79,9 +91,29 @@ class FirebaseDataService: ObservableObject {
         listeners.append(listener)
     }
 
+    func generateSKU(for item: InventoryItem) -> String {
+        let prefix = item.category?.skuPrefix ?? {
+            let name = item.name.uppercased().filter { $0.isLetter }
+            return String(name.prefix(3)).padding(toLength: 3, withPad: "X", startingAt: 0)
+        }()
+
+        let existingCount = inventoryItems.filter { existing in
+            if let cat = item.category, let existingCat = existing.category {
+                return cat == existingCat
+            }
+            return existing.sku?.hasPrefix(prefix) ?? false
+        }.count
+
+        return "\(prefix)-\(String(format: "%03d", existingCount + 1))"
+    }
+
     func addInventoryItem(_ item: InventoryItem) async throws {
         guard let path = basePath else { throw FirebaseError.notAuthenticated }
-        _ = try db.collection("\(path)/inventory").addDocument(from: item)
+        var newItem = item
+        if newItem.sku == nil || newItem.sku?.isEmpty == true {
+            newItem.sku = generateSKU(for: newItem)
+        }
+        _ = try db.collection("\(path)/inventory").addDocument(from: newItem)
     }
 
     func updateInventoryItem(_ item: InventoryItem) async throws {
@@ -196,5 +228,160 @@ class FirebaseDataService: ObservableObject {
     func deleteOrder(_ orderId: String) async throws {
         guard let path = basePath else { throw FirebaseError.notAuthenticated }
         try await db.collection("\(path)/orders").document(orderId).delete()
+    }
+
+    // MARK: - Sales
+
+    private func listenToSales() {
+        guard let path = basePath else { return }
+        let listener = db.collection("\(path)/sales")
+            .order(by: "date", descending: true)
+            .limit(to: 500)
+            .addSnapshotListener { [weak self] snapshot, error in
+                Task { @MainActor in
+                    guard let self else { return }
+                    if let error {
+                        self.errorMessage = error.localizedDescription
+                        return
+                    }
+                    self.sales = snapshot?.documents.compactMap { doc in
+                        try? doc.data(as: SaleTransaction.self)
+                    } ?? []
+                }
+            }
+        listeners.append(listener)
+    }
+
+    func addSale(_ sale: SaleTransaction) async throws {
+        guard let path = basePath else { throw FirebaseError.notAuthenticated }
+        _ = try db.collection("\(path)/sales").addDocument(from: sale)
+    }
+
+    func deleteSale(_ saleId: String) async throws {
+        guard let path = basePath else { throw FirebaseError.notAuthenticated }
+        try await db.collection("\(path)/sales").document(saleId).delete()
+    }
+
+    var todaySales: [SaleTransaction] {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: Date())
+        return sales.filter { $0.date >= startOfDay }
+    }
+
+    var todayRevenue: Double {
+        todaySales.reduce(0) { $0 + $1.totalAmount }
+    }
+
+    var todayProfit: Double {
+        todaySales.reduce(0) { $0 + $1.grossProfit }
+    }
+
+    var todayOrderCount: Int {
+        todaySales.count
+    }
+
+    // MARK: - Customers
+
+    private func listenToCustomers() {
+        guard let path = basePath else { return }
+        let listener = db.collection("\(path)/customers")
+            .addSnapshotListener { [weak self] snapshot, error in
+                Task { @MainActor in
+                    guard let self else { return }
+                    if let error {
+                        self.errorMessage = error.localizedDescription
+                        return
+                    }
+                    self.customers = snapshot?.documents.compactMap { doc in
+                        try? doc.data(as: Customer.self)
+                    } ?? []
+                }
+            }
+        listeners.append(listener)
+    }
+
+    func addCustomer(_ customer: Customer) async throws {
+        guard let path = basePath else { throw FirebaseError.notAuthenticated }
+        _ = try db.collection("\(path)/customers").addDocument(from: customer)
+    }
+
+    func updateCustomer(_ customer: Customer) async throws {
+        guard let path = basePath, let id = customer.id else { throw FirebaseError.notAuthenticated }
+        try db.collection("\(path)/customers").document(id).setData(from: customer, merge: true)
+    }
+
+    func deleteCustomer(_ customerId: String) async throws {
+        guard let path = basePath else { throw FirebaseError.notAuthenticated }
+        try await db.collection("\(path)/customers").document(customerId).delete()
+    }
+
+    // MARK: - Staff
+
+    private func listenToStaff() {
+        guard let path = basePath else { return }
+        let listener = db.collection("\(path)/staff")
+            .addSnapshotListener { [weak self] snapshot, error in
+                Task { @MainActor in
+                    guard let self else { return }
+                    if let error {
+                        self.errorMessage = error.localizedDescription
+                        return
+                    }
+                    self.staffMembers = snapshot?.documents.compactMap { doc in
+                        try? doc.data(as: StaffMember.self)
+                    } ?? []
+                }
+            }
+        listeners.append(listener)
+    }
+
+    func addStaffMember(_ member: StaffMember) async throws {
+        guard let path = basePath else { throw FirebaseError.notAuthenticated }
+        _ = try db.collection("\(path)/staff").addDocument(from: member)
+    }
+
+    func updateStaffMember(_ member: StaffMember) async throws {
+        guard let path = basePath, let id = member.id else { throw FirebaseError.notAuthenticated }
+        try db.collection("\(path)/staff").document(id).setData(from: member, merge: true)
+    }
+
+    func deleteStaffMember(_ memberId: String) async throws {
+        guard let path = basePath else { throw FirebaseError.notAuthenticated }
+        try await db.collection("\(path)/staff").document(memberId).delete()
+    }
+
+    // MARK: - Recipes
+
+    private func listenToRecipes() {
+        guard let path = basePath else { return }
+        let listener = db.collection("\(path)/recipes")
+            .addSnapshotListener { [weak self] snapshot, error in
+                Task { @MainActor in
+                    guard let self else { return }
+                    if let error {
+                        self.errorMessage = error.localizedDescription
+                        return
+                    }
+                    self.recipes = snapshot?.documents.compactMap { doc in
+                        try? doc.data(as: Recipe.self)
+                    } ?? []
+                }
+            }
+        listeners.append(listener)
+    }
+
+    func addRecipe(_ recipe: Recipe) async throws {
+        guard let path = basePath else { throw FirebaseError.notAuthenticated }
+        _ = try db.collection("\(path)/recipes").addDocument(from: recipe)
+    }
+
+    func updateRecipe(_ recipe: Recipe) async throws {
+        guard let path = basePath, let id = recipe.id else { throw FirebaseError.notAuthenticated }
+        try db.collection("\(path)/recipes").document(id).setData(from: recipe, merge: true)
+    }
+
+    func deleteRecipe(_ recipeId: String) async throws {
+        guard let path = basePath else { throw FirebaseError.notAuthenticated }
+        try await db.collection("\(path)/recipes").document(recipeId).delete()
     }
 }

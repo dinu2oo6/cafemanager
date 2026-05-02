@@ -16,7 +16,7 @@ struct StockOptimizer {
 
         if avgConsumption == 0 {
             return StockRecommendation(
-                itemId: item.id ?? "", itemName: item.name,
+                itemId: item.id ?? "", itemName: item.displayName,
                 currentQuantity: item.quantity, unit: item.unit,
                 daysUntilStockout: 999, recommendedOrderDate: orderDate,
                 recommendedQuantity: item.reorderLevel,
@@ -37,7 +37,7 @@ struct StockOptimizer {
         }
 
         return StockRecommendation(
-            itemId: item.id ?? "", itemName: item.name,
+            itemId: item.id ?? "", itemName: item.displayName,
             currentQuantity: item.quantity, unit: item.unit,
             daysUntilStockout: daysLeft, recommendedOrderDate: orderDate,
             recommendedQuantity: max(suggestedQty, item.reorderLevel),

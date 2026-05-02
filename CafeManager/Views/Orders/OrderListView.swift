@@ -7,49 +7,47 @@ struct OrderListView: View {
     @State private var selectedOrder: Order?
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                AppTheme.accent.ignoresSafeArea()
+        ZStack {
+            AppTheme.accent.ignoresSafeArea()
 
-                Group {
-                    if dataService.isLoading {
-                        LoadingView(message: "Loading orders...")
-                    } else if dataService.orders.isEmpty {
-                        EmptyStateView(
-                            icon: "cart",
-                            title: "No Orders",
-                            message: "Create orders to track purchases from your suppliers and manage deliveries.",
-                            actionTitle: "Create Order"
-                        ) { showingAdd = true }
-                    } else {
-                        orderContent
-                    }
+            Group {
+                if dataService.isLoading {
+                    LoadingView(message: "Loading orders...")
+                } else if dataService.orders.isEmpty {
+                    EmptyStateView(
+                        icon: "cart",
+                        title: "No Orders",
+                        message: "Create orders to track purchases from your suppliers and manage deliveries.",
+                        actionTitle: "Create Order"
+                    ) { showingAdd = true }
+                } else {
+                    orderContent
                 }
             }
-            .navigationTitle("Orders")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { showingAdd = true } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .foregroundColor(AppTheme.primary)
-                            .font(.title3)
-                    }
+        }
+        .navigationTitle("Orders")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button { showingAdd = true } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundColor(AppTheme.primary)
+                        .font(.title3)
                 }
             }
-            .sheet(isPresented: $showingAdd) {
-                AddEditOrderView(order: nil)
-            }
-            .sheet(item: $selectedOrder) { order in
-                AddEditOrderView(order: order)
-            }
-            .overlay(alignment: .top) {
-                if let error = viewModel.errorMessage ?? dataService.errorMessage {
-                    ErrorBannerView(message: error, dismissAction: {
-                        viewModel.errorMessage = nil
-                        dataService.errorMessage = nil
-                    })
-                    .padding(.horizontal)
-                }
+        }
+        .sheet(isPresented: $showingAdd) {
+            AddEditOrderView(order: nil)
+        }
+        .sheet(item: $selectedOrder) { order in
+            AddEditOrderView(order: order)
+        }
+        .overlay(alignment: .top) {
+            if let error = viewModel.errorMessage ?? dataService.errorMessage {
+                ErrorBannerView(message: error, dismissAction: {
+                    viewModel.errorMessage = nil
+                    dataService.errorMessage = nil
+                })
+                .padding(.horizontal)
             }
         }
     }
@@ -86,6 +84,17 @@ struct OrderListView: View {
                             }
                         } label: {
                             Label("Delete", systemImage: "trash")
+                        }
+
+                        if order.status == .pending || order.status == .ordered {
+                            Button {
+                                Task {
+                                    await viewModel.updateStatus(order, to: .cancelled, service: dataService)
+                                }
+                            } label: {
+                                Label("Cancel", systemImage: "xmark.circle")
+                            }
+                            .tint(AppTheme.error)
                         }
 
                         if order.status == .pending {
@@ -187,6 +196,7 @@ struct OrderListView: View {
         case .pending: return AppTheme.warning
         case .ordered: return AppTheme.primary
         case .delivered: return AppTheme.success
+        case .cancelled: return AppTheme.error
         }
     }
 

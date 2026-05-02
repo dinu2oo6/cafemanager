@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		97756A552FA32CAD0058BC88 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000012FA400000058BC88 /* FirebaseAuth */; };
 		97756A562FA32CAD0058BC88 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000022FA400000058BC88 /* FirebaseFirestore */; };
+		97756B162FA382030058BC88 /* GoogleGenerativeAI in Frameworks */ = {isa = PBXBuildFile; productRef = 97756B152FA382030058BC88 /* GoogleGenerativeAI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				97756B162FA382030058BC88 /* GoogleGenerativeAI in Frameworks */,
 				97756A562FA32CAD0058BC88 /* FirebaseFirestore in Frameworks */,
 				97756A552FA32CAD0058BC88 /* FirebaseAuth in Frameworks */,
 			);
@@ -74,6 +76,7 @@
 			packageProductDependencies = (
 				AA0000012FA400000058BC88 /* FirebaseAuth */,
 				AA0000022FA400000058BC88 /* FirebaseFirestore */,
+				97756B152FA382030058BC88 /* GoogleGenerativeAI */,
 			);
 			productName = CafeManager;
 			productReference = 977569CE2FA31FDF0058BC88 /* CafeManager.app */;
@@ -105,6 +108,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				AA0000002FA400000058BC88 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				97756B142FA382030058BC88 /* XCRemoteSwiftPackageReference "generative-ai-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 977569CF2FA31FDF0058BC88 /* Products */;
@@ -262,6 +266,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "CafeManager uses the camera to scan bills and receipts for automatic inventory updates.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "CafeManager uses the microphone for voice commands to manage your inventory.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "CafeManager accesses your photos to scan bills and receipts for automatic inventory updates.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "CafeManager uses speech recognition so you can control inventory with your voice.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -297,6 +305,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "CafeManager uses the camera to scan bills and receipts for automatic inventory updates.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "CafeManager uses the microphone for voice commands to manage your inventory.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "CafeManager accesses your photos to scan bills and receipts for automatic inventory updates.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "CafeManager uses speech recognition so you can control inventory with your voice.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -347,6 +359,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		97756B142FA382030058BC88 /* XCRemoteSwiftPackageReference "generative-ai-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google-gemini/generative-ai-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.5.6;
+			};
+		};
 		AA0000002FA400000058BC88 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -358,6 +378,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		97756B152FA382030058BC88 /* GoogleGenerativeAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 97756B142FA382030058BC88 /* XCRemoteSwiftPackageReference "generative-ai-swift" */;
+			productName = GoogleGenerativeAI;
+		};
 		AA0000012FA400000058BC88 /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = AA0000002FA400000058BC88 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

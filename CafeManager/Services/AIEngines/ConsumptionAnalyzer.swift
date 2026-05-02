@@ -5,7 +5,7 @@ struct ConsumptionAnalyzer {
         let consumption = item.dailyConsumption
         guard !consumption.isEmpty else {
             return ConsumptionInsight(
-                itemId: item.id ?? "", itemName: item.name,
+                itemId: item.id ?? "", itemName: item.displayName,
                 dailyAverage: 0, weekdayAverage: 0, weekendAverage: 0,
                 trendPercentage: 0, isAnomalous: false
             )
@@ -27,7 +27,7 @@ struct ConsumptionAnalyzer {
         let anomalous = isAnomalous(consumption: consumption)
 
         return ConsumptionInsight(
-            itemId: item.id ?? "", itemName: item.name,
+            itemId: item.id ?? "", itemName: item.displayName,
             dailyAverage: dailyAverage, weekdayAverage: weekdayAvg,
             weekendAverage: weekendAvg, trendPercentage: trend,
             isAnomalous: anomalous

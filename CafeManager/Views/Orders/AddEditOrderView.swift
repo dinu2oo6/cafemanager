@@ -57,16 +57,23 @@ struct AddEditOrderView: View {
                         Picker("Select Item", selection: $selectedItemId) {
                             Text("Choose an item").tag("")
                             ForEach(dataService.inventoryItems) { item in
-                                Text("\(item.name) (\(item.quantity) \(item.unit))").tag(item.id ?? "")
+                                Text("\(item.displayName) — \(item.skuDisplay) (\(item.quantity) \(item.unit))").tag(item.id ?? "")
                             }
                         }
                         .tint(AppTheme.primary)
 
                         if let item = selectedItem {
                             HStack {
-                                Text("Current Stock")
-                                    .font(.caption)
-                                    .foregroundColor(AppTheme.secondary)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(item.displayName)
+                                        .font(.caption.bold())
+                                        .foregroundColor(AppTheme.textPrimary)
+                                    if let sku = item.sku {
+                                        Text(sku)
+                                            .font(.caption2.monospaced())
+                                            .foregroundColor(AppTheme.primary)
+                                    }
+                                }
                                 Spacer()
                                 Text("\(item.quantity) \(item.unit)")
                                     .font(.caption.bold())
@@ -217,7 +224,7 @@ struct AddEditOrderView: View {
         )
         guard validationError == nil else { return }
 
-        let itemName = selectedItem?.name ?? ""
+        let itemName = selectedItem?.displayName ?? ""
         let supplierName = selectedSupplier?.name ?? ""
 
         var newOrder = order ?? Order.empty

@@ -15,6 +15,8 @@ struct AddEditInventoryView: View {
 
     // Form fields
     @State private var name = ""
+    @State private var brand = ""
+    @State private var selectedCategory: ItemCategory = .other
     @State private var quantity = ""
     @State private var unit = "kg"
     @State private var reorderLevel = ""
@@ -35,6 +37,9 @@ struct AddEditInventoryView: View {
     @State private var wasteReason = ""
     @State private var wasteDate = Date()
     @State private var showWasteSheet = false
+
+    // Delete
+    @State private var showDeleteConfirmation = false
 
     let units = ["kg", "g", "L", "mL", "pcs", "dozen", "bags", "boxes", "packets"]
 
@@ -57,14 +62,54 @@ struct AddEditInventoryView: View {
                         }
                     }
 
+                    // MARK: - SKU Badge (edit mode)
+                    if isEditing, let sku = currentItem?.sku, !sku.isEmpty {
+                        Section {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("SKU")
+                                        .font(.caption)
+                                        .foregroundColor(AppTheme.secondary)
+                                    Text(sku)
+                                        .font(.title3.bold().monospaced())
+                                        .foregroundColor(AppTheme.primary)
+                                }
+                                Spacer()
+                                if let cat = currentItem?.category {
+                                    Label(cat.rawValue, systemImage: cat.icon)
+                                        .font(.caption.bold())
+                                        .foregroundColor(AppTheme.primary)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(AppTheme.primary.opacity(0.1))
+                                        .cornerRadius(8)
+                                }
+                            }
+                        }
+                    }
+
                     // MARK: - Basic Info
                     Section("Item Details") {
                         HStack {
                             Image(systemName: "tag.fill")
                                 .foregroundColor(AppTheme.primary)
                                 .frame(width: 20)
-                            TextField("Item Name", text: $name)
+                            TextField("Item Name *", text: $name)
                         }
+
+                        HStack {
+                            Image(systemName: "building.2.fill")
+                                .foregroundColor(AppTheme.primary)
+                                .frame(width: 20)
+                            TextField("Brand (e.g. Amul, Nandini)", text: $brand)
+                        }
+
+                        Picker("Category", selection: $selectedCategory) {
+                            ForEach(ItemCategory.allCases) { cat in
+                                Label(cat.rawValue, systemImage: cat.icon).tag(cat)
+                            }
+                        }
+                        .tint(AppTheme.primary)
 
                         HStack {
                             Image(systemName: "number")
@@ -160,6 +205,16 @@ struct AddEditInventoryView: View {
                             } label: {
                                 Label("Log Waste / Spoilage", systemImage: "trash")
                                     .foregroundColor(AppTheme.warning)
+                            }
+                        }
+
+                            Section {
+                            Button(role: .destructive) {
+                                showDeleteConfirmation = true
+                            } label: {
+                                Label("Delete Item", systemImage: "trash.fill")
+                                    .foregroundColor(AppTheme.error)
+                                    .frame(maxWidth: .infinity, alignment: .center)
                             }
                         }
 
@@ -280,12 +335,26 @@ struct AddEditInventoryView: View {
                     }
                 }
             }
+            .alert("Delete Item", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete", role: .destructive) {
+                    guard let itemId = item?.id else { return }
+                    Task {
+                        await viewModel.deleteItem(itemId, service: dataService)
+                        if viewModel.errorMessage == nil { dismiss() }
+                    }
+                }
+            } message: {
+                Text("Are you sure you want to delete \"\(name)\"? This cannot be undone.")
+            }
         }
     }
 
     private func populateFields() {
         guard let item else { return }
         name = item.name
+        brand = item.brand ?? ""
+        selectedCategory = item.category ?? .other
         quantity = String(item.quantity)
         unit = item.unit
         reorderLevel = String(item.reorderLevel)
@@ -307,6 +376,8 @@ struct AddEditInventoryView: View {
 
         var newItem = item ?? InventoryItem.empty
         newItem.name = name.trimmingCharacters(in: .whitespaces)
+        newItem.brand = brand.trimmingCharacters(in: .whitespaces).isEmpty ? nil : brand.trimmingCharacters(in: .whitespaces)
+        newItem.category = selectedCategory
         newItem.quantity = Int(quantity) ?? 0
         newItem.unit = unit
         newItem.reorderLevel = Int(reorderLevel) ?? 10

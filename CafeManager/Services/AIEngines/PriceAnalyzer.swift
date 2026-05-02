@@ -22,7 +22,7 @@ struct PriceAnalyzer {
             }
 
             return PriceInsight(
-                itemName: item.name, currentCost: item.costPrice,
+                itemName: item.displayName, currentCost: item.costPrice,
                 sellingPrice: item.sellingPrice, margin: margin,
                 monthlyQuantity: monthlyQty, suggestion: suggestion
             )

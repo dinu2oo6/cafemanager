@@ -8,7 +8,12 @@ class InventoryViewModel: ObservableObject {
 
     func filteredItems(_ items: [InventoryItem]) -> [InventoryItem] {
         guard !searchText.isEmpty else { return items }
-        return items.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        return items.filter {
+            $0.name.localizedCaseInsensitiveContains(searchText)
+            || ($0.brand?.localizedCaseInsensitiveContains(searchText) ?? false)
+            || ($0.sku?.localizedCaseInsensitiveContains(searchText) ?? false)
+            || ($0.category?.rawValue.localizedCaseInsensitiveContains(searchText) ?? false)
+        }
     }
 
     func lowStockItems(_ items: [InventoryItem]) -> [InventoryItem] {

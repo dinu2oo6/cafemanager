@@ -5,35 +5,33 @@ struct PredictionDashboardView: View {
     @StateObject private var viewModel = PredictionViewModel()
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                AppTheme.accent.ignoresSafeArea()
+        ZStack {
+            AppTheme.accent.ignoresSafeArea()
 
-                Group {
-                    if dataService.inventoryItems.isEmpty {
-                        EmptyStateView(
-                            icon: "target",
-                            title: "No Predictions Yet",
-                            message: "Add inventory items and log daily consumption to see AI-powered demand forecasts, stock optimization, and waste predictions."
-                        )
-                    } else {
-                        predictionContent
-                    }
+            Group {
+                if dataService.inventoryItems.isEmpty {
+                    EmptyStateView(
+                        icon: "target",
+                        title: "No Predictions Yet",
+                        message: "Add inventory items and log daily consumption to see AI-powered demand forecasts, stock optimization, and waste predictions."
+                    )
+                } else {
+                    predictionContent
                 }
             }
-            .navigationTitle("Predictions")
-            .onAppear {
-                viewModel.refreshPredictions(
-                    items: dataService.inventoryItems,
-                    suppliers: dataService.suppliers
-                )
-            }
-            .onChange(of: dataService.inventoryItems.count) { _ in
-                viewModel.refreshPredictions(
-                    items: dataService.inventoryItems,
-                    suppliers: dataService.suppliers
-                )
-            }
+        }
+        .navigationTitle("Predictions")
+        .onAppear {
+            viewModel.refreshPredictions(
+                items: dataService.inventoryItems,
+                suppliers: dataService.suppliers
+            )
+        }
+        .onChange(of: dataService.inventoryItems.count) { _ in
+            viewModel.refreshPredictions(
+                items: dataService.inventoryItems,
+                suppliers: dataService.suppliers
+            )
         }
     }
 

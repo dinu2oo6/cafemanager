@@ -8,7 +8,7 @@ struct WastePredictor {
 
         if daysUntilExpiry <= 0 {
             return WasteRisk(
-                itemId: item.id ?? "", itemName: item.name, unit: item.unit,
+                itemId: item.id ?? "", itemName: item.displayName, unit: item.unit,
                 daysUntilExpiry: 0,
                 predictedWasteQuantity: Double(item.quantity),
                 wastePercentage: 100,
@@ -32,7 +32,7 @@ struct WastePredictor {
         }
 
         return WasteRisk(
-            itemId: item.id ?? "", itemName: item.name, unit: item.unit,
+            itemId: item.id ?? "", itemName: item.displayName, unit: item.unit,
             daysUntilExpiry: daysUntilExpiry,
             predictedWasteQuantity: willWaste,
             wastePercentage: wastePercentage,
