@@ -68,6 +68,14 @@ struct MoreTabView: View {
                         }
                     }
 
+                    Section("Hiring") {
+                        NavigationLink {
+                            JobImportView()
+                        } label: {
+                            moreRow(icon: "doc.text.magnifyingglass", title: "Job Import", subtitle: "Fetch & parse job listings", color: .cyan)
+                        }
+                    }
+
                     Section("Management") {
                         NavigationLink {
                             CustomerListView()

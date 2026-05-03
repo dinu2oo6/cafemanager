@@ -150,6 +150,7 @@
   - [Analytics](#analytics-1)
   - [AI Prediction Engines](#ai-prediction-engines)
   - [AI Assistant](#ai-assistant-1)
+  - [Job Import — Hiring Module](#job-import--hiring-module)
 - [Setup & Run](#setup--run)
 - [Project Structure](#project-structure)
 
@@ -801,6 +802,221 @@ Every mutating action shows the specific action and data before it executes — 
 **Speech-to-text:** `SFSpeechRecognizer` (en-US, on-device). Tap microphone → speak → tap stop → transcript populates the message field.
 
 **Text-to-speech:** `AVSpeechSynthesizer` reads assistant responses aloud with audio ducking so background music lowers while the assistant speaks.
+
+---
+
+## Job Import — Hiring Module
+
+### The Problem
+
+Hiring for a café is surprisingly messy. A manager looking to fill a barista or kitchen role typically has a job posting open in one browser tab and their phone or laptop open for everything else. The actual process looks like this:
+
+1. Find a listing on Indeed, Naukri, or Glassdoor
+2. Manually read through the description to pull out role title, requirements, salary, and location
+3. Copy chunks of it into WhatsApp or a notes app to share with a co-owner or to keep for reference
+4. Lose track of which version was shared, repeat the cycle for every new candidate
+
+This is pure overhead — no value, just friction. And it gets worse on platforms like **LinkedIn**, where every job listing sits behind a mandatory login wall, making programmatic access impossible. Even for open platforms, many listings are served by JavaScript-rendered pages or protected by bot-detection systems (Cloudflare, CAPTCHAs), so a naive `URLSession` fetch returns a bot-check page instead of any real content.
+
+The result: managers either waste time manually transcribing job posts or skip structured review entirely.
+
+---
+
+### The Solution
+
+The Job Import module eliminates that overhead with a **two-mode, three-tier fetch pipeline** that extracts a clean, structured job card from any URL — or from pasted text as a zero-friction fallback.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     JobImportView                           │
+│   Mode 1: URL input    │    Mode 2: Manual paste            │
+└───────────────┬─────────────────────────────────────────────┘
+                │
+                ▼
+      JobImportViewModel
+        ├── validates URL format
+        ├── detects LinkedIn early → shows guided fallback
+        └── calls JobFetcherService.fetchJobContent()
+                │
+                ▼
+      ┌─────────────────────────────────────┐
+      │         3-Tier Fetch Pipeline       │
+      │                                     │
+      │  Tier 1: Jina Reader API            │
+      │    r.jina.ai/{url} → Markdown       │  ← fastest path
+      │    validates content quality        │
+      │    ↓ if blocked or thin content     │
+      │                                     │
+      │  Tier 2: WKWebView Headless         │
+      │    loads URL like a real browser    │  ← JS-rendered pages
+      │    waits for navigation + 2s settle │
+      │    extracts document.body.innerText │
+      │    ↓ if still fails                 │
+      │                                     │
+      │  Fallback: Guided manual paste      │  ← always works
+      └─────────────────────────────────────┘
+                │
+                ▼
+      isValidJobContent() — two-layer filter
+        ├── block: "cloudflare", "captcha", "access denied"…
+        └── require: "responsibilities", "qualifications"…
+                │
+                ▼
+      JobFetcherService.parseContent()
+        ├── title from Markdown `# heading`
+        ├── company / location / salary from labeled lines
+        ├── requirements from bullet points under keyword sections
+        └── description from all remaining lines
+                │
+                ▼
+      JobImportView shows structured job card
+        ├── title, company, location, salary
+        ├── collapsible description (Show More / Show Less)
+        ├── collapsible requirements list (Show All N)
+        └── Copy Content — raw text to clipboard
+```
+
+---
+
+### Tier 1 — Jina Reader
+
+[Jina Reader](https://jina.ai/reader) is a free public API that takes any URL and returns clean, ad-free Markdown. It handles JavaScript rendering server-side, strips navigation, headers, footers, and cookie banners, and returns only the page body — perfect for job listings.
+
+```swift
+let jinaURL = URL(string: "https://r.jina.ai/\(url.absoluteString)")
+var request = URLRequest(url: jinaURL, timeoutInterval: 30)
+request.setValue("text/markdown", forHTTPHeaderField: "Accept")
+```
+
+This is the happy path: one network call, clean structured output, no browser overhead.
+
+---
+
+### Tier 2 — WKWebView Headless Fallback
+
+When a site blocks Jina (some pages require cookies or session state), the service spins up a full `WKWebView` off-screen at 1080×1920 and loads the URL exactly as Safari would — executing JavaScript, setting cookies, following redirects. After the `didFinish` navigation callback fires (or a 15-second timeout), it waits an additional 2 seconds for lazy-loaded content to settle, then extracts `document.body.innerText` via `evaluateJavaScript`.
+
+```swift
+let text: String = try await withCheckedThrowingContinuation { cont in
+    wv.evaluateJavaScript("document.body.innerText") { result, error in
+        cont.resume(returning: result as? String ?? "")
+    }
+}
+```
+
+This handles SPA-rendered career pages (React/Next.js job boards, ATS platforms like Greenhouse and Lever) that Jina can't reach.
+
+---
+
+### Content Validation — Two-Layer Filter
+
+Raw fetched content isn't trusted. Before parsing, `isValidJobContent()` runs two checks:
+
+**Block layer** — rejects pages that matched 2+ bot-detection phrases:
+```
+"just a moment" · "cloudflare" · "captcha" · "access denied"
+"verify you are human" · "checking your browser" · "403 forbidden"
+```
+
+**Signal layer** — requires 2+ job-specific phrases before accepting:
+```
+"job description" · "responsibilities" · "qualifications"
+"years of experience" · "full-time" · "salary" · "apply"
+```
+
+A page that passes both layers is guaranteed to contain real job content, not a wall of bot-check boilerplate.
+
+---
+
+### LinkedIn — Graceful Early Exit
+
+LinkedIn is detected before any network call is made by inspecting the URL host. Rather than attempting a fetch that will fail (LinkedIn requires session cookies that no unauthenticated app can supply), the module immediately shows a three-step manual fallback guide:
+
+```
+1. Open the job listing in LinkedIn
+2. Select and copy the job description
+3. Paste it here using the button below
+```
+
+Tapping **Paste Description Instead** switches to manual paste mode with a pre-focused text editor — the manager is productive in under 10 seconds.
+
+---
+
+### End-to-End Example
+
+**Scenario:** The manager found a barista opening on Indeed and wants to review the requirements quickly.
+
+```
+1. Manager taps "More" tab → "Job Import"
+
+2. Pastes URL:
+   https://in.indeed.com/viewjob?jk=abc123
+
+3. Taps "Fetch Job Details"
+   → Status: "Connecting to page renderer..."
+   → Jina Reader fetches clean Markdown in ~2s
+
+4. Content validation passes:
+   ✓ Contains "responsibilities", "qualifications", "experience"
+   ✗ No bot-detection phrases
+
+5. Parser extracts:
+   Title:    "Barista – Full Time"
+   Company:  "Blue Tokai Coffee Roasters"
+   Location: "Bangalore, Karnataka"
+   Salary:   "₹18,000 – ₹22,000 / month"
+   Requirements:
+     ✓ 1+ year barista experience preferred
+     ✓ Knowledge of espresso preparation
+     ✓ Ability to work morning/evening shifts
+     ✓ Basic English communication skills
+   Description: "We are looking for a passionate barista..."
+
+6. Job card renders with:
+   ┌─────────────────────────────────────────┐
+   │ ✓ Jina Reader                  Open ↗  │
+   │                                         │
+   │ Barista – Full Time                     │
+   │ 🏢 Blue Tokai Coffee Roasters           │
+   │ 📍 Bangalore, Karnataka                 │
+   │ 💵 ₹18,000 – ₹22,000 / month           │
+   │                                         │
+   │ Description ──────────────────────────  │
+   │ We are looking for a passionate...      │
+   │ [Show More]                             │
+   │                                         │
+   │ Requirements ─────────────────────────  │
+   │ ✓ 1+ year barista experience preferred  │
+   │ ✓ Knowledge of espresso preparation     │
+   │ ✓ Ability to work morning/evening shifts│
+   │ ✓ Basic English communication skills    │
+   │ [Show All 8]                            │
+   └─────────────────────────────────────────┘
+
+   [Copy Content]    [New Import]
+
+7. Manager taps "Copy Content" → full raw Markdown 
+   on clipboard → pastes into WhatsApp with co-owner
+```
+
+**If the site blocks Jina (e.g., a custom ATS):**
+The service automatically falls back to WKWebView, re-runs validation, and the manager sees the same result card — no error, no manual intervention.
+
+**If the URL is from LinkedIn:**
+Detected immediately, no network call wasted. Manager sees the three-step guide and switches to paste mode in one tap.
+
+---
+
+### Key Design Decisions
+
+| Decision | Rationale |
+|---|---|
+| Jina Reader first, WKWebView second | Jina is fast and server-rendered; WKWebView is a real browser but heavier. Try the cheap path first. |
+| Two-layer content validation | Prevents bot-check pages from being silently parsed as "job listings" with garbage data |
+| LinkedIn detected at URL level | LinkedIn's login wall is a policy, not a technical limitation. Detecting early avoids wasted latency and shows a better UX than a cryptic parse failure |
+| Manual paste always available | Some pages will always block automated access. Manual paste is the unconditional fallback — zero dependencies, zero failure modes |
+| Parser uses Markdown signals | Jina returns Markdown, so `# Title` headings are reliable. Bullet prefixes (`-`, `•`, `*`, `·`) identify requirement lists across any site's formatting |
+| `rawContent` preserved on the model | The full unmodified content is stored so "Copy Content" gives the complete text regardless of what the parser extracted or truncated |
 
 ---
 
